@@ -17,6 +17,9 @@ lto = "thin"
 [dependencies]
 anyhow = "1.0.98"
 bevy = { version = "0.15.0" }
+rand_core = "0.6"
+bevy_rand = "0.9"
+bevy_prng = { version = "0.9", features = ["wyrand"] }
 time = { version = "0.3.36", features = [
     "formatting",
     "local-offset",

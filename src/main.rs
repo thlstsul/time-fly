@@ -4,6 +4,8 @@ use bevy::{
     prelude::*,
     window::{CursorOptions, PresentMode, WindowLevel},
 };
+use bevy_prng::WyRand;
+use bevy_rand::plugin::EntropyPlugin;
 use font::FontPlugin;
 use graphics::GraphicsPlugin;
 
@@ -36,6 +38,7 @@ fn main() {
             }),
             FontPlugin,
         ))
+        .add_plugins(EntropyPlugin::<WyRand>::default())
         .add_plugins(GraphicsPlugin)
         .run();
 }

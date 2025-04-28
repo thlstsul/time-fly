@@ -1,4 +1,4 @@
-use std::f32::consts::PI;
+use std::{f32::consts::PI, time::Duration};
 
 use bevy::{
     asset::RenderAssetUsages,
@@ -8,8 +8,12 @@ use bevy::{
         mesh::VertexAttributeValues,
         render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages},
     },
+    time::common_conditions::on_timer,
     window::{Monitor, PrimaryMonitor},
 };
+use bevy_prng::WyRand;
+use bevy_rand::prelude::Entropy;
+use rand_core::RngCore;
 
 use crate::graphics::CAMERA_TRANFOMER;
 
@@ -34,7 +38,7 @@ impl Plugin for CubePlugin {
                 progress: 0.,
             })
             .add_systems(Startup, setup)
-            .add_systems(Update, auto_rotate)
+            .add_systems(Update, auto_rotate.run_if(on_timer(Duration::from_secs(1))))
             .add_systems(Update, rotate_face);
     }
 }
@@ -157,6 +161,7 @@ fn setup(
             MeshMaterial3d(time_material_handle),
             cube_transform,
             Cube,
+            Entropy::<WyRand>::default(),
         ))
         .with_children(|commands| {
             let mut colorful_cube = Mesh::from(Cuboid::from_length(CUBE_PIECE_SIZE));
@@ -270,13 +275,15 @@ fn rotation_of_cube(cube_transform: &Transform, camera_transform: &Transform) ->
     Quat::from_axis_angle(rotation_axis, theta)
 }
 
-fn auto_rotate(time: Res<Time>, mut rotation_state: ResMut<RotationState>) {
+fn auto_rotate(
+    mut rng: Single<&mut Entropy<WyRand>, With<Cube>>,
+    mut rotation_state: ResMut<RotationState>,
+) {
     if rotation_state.is_rotating {
         return;
     }
 
-    // TODO 随机
-    let rotate_index = time.elapsed_secs() as u64 % 6;
+    let rotate_index = rng.next_u32() % 6;
 
     let (face, axis, dir) = match rotate_index {
         0 => (Face::Front, Vec3::Z, 1.),
