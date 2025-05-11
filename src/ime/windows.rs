@@ -223,7 +223,7 @@ impl IMEControl {
     }
 
     fn ensure_hwnd(hwnd: Option<HWND>) -> Result<HWND> {
-        hwnd.ok_or_else(|| Self::get_focused_window())
+        hwnd.ok_or_else(Self::get_focused_window)
             .or_else(|_| Self::get_focused_window())
     }
 

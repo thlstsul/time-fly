@@ -3,8 +3,9 @@ mod windows;
 
 use anyhow::Result;
 
+#[allow(dead_code)]
 pub trait InputMode {
-    fn new(check_timeout: u32, base_status: bool) -> IMEControl;
+    fn new(check_timeout: u32, base_status: bool) -> Self;
     fn get_input_mode(&self) -> Result<IMEResponse>;
     fn set_input_mode(&self, is_cn: bool) -> Result<()>;
 }
