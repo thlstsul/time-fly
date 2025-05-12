@@ -15,8 +15,6 @@ use bevy_prng::WyRand;
 use bevy_rand::prelude::Entropy;
 use rand_core::RngCore;
 
-use crate::graphics::CAMERA_TRANFOMER;
-
 use super::time::{TimePlugin, TimeSpan};
 
 const CUBE_PIECE_SIZE: f32 = 1.0;
@@ -38,6 +36,7 @@ impl Plugin for CubePlugin {
                 progress: 0.,
             })
             .add_systems(Startup, setup)
+            .add_systems(Update, set_cube_position.run_if(run_once))
             .add_systems(Update, auto_rotate.run_if(on_timer(Duration::from_secs(1))))
             .add_systems(Update, rotate_face);
     }
@@ -82,7 +81,6 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut images: ResMut<Assets<Image>>,
     asset_server: Res<AssetServer>,
-    monitor: Single<&Monitor, With<PrimaryMonitor>>,
 ) {
     let cube_texture = images.add(cube_texture());
     let texture_camera = commands
@@ -143,23 +141,10 @@ fn setup(
         ..Default::default()
     };
 
-    let viewport_size = Vec2::new(
-        monitor.physical_width as f32,
-        monitor.physical_height as f32,
-    );
-    let screen_pos = Vec2::new(viewport_size.x - 475., viewport_size.y - 435.);
-    let cube_pos = screen_to_world(&CAMERA_TRANFOMER, screen_pos, viewport_size)
-        .unwrap_or_default()
-        .extend(0.);
-    let cube_transform = Transform::from_translation(cube_pos);
-    let cube_rotation = rotation_of_cube(&cube_transform, &CAMERA_TRANFOMER);
-    let cube_transform = cube_transform.with_rotation(cube_rotation);
-
     commands
         .spawn((
             Mesh3d(cube_handle),
             MeshMaterial3d(time_material_handle),
-            cube_transform,
             Cube,
             Entropy::<WyRand>::default(),
         ))
@@ -201,62 +186,56 @@ fn setup(
             }
         });
 
+    commands.spawn(PointLight {
+        shadows_enabled: true,
+        ..default()
+    });
+}
+
+fn set_cube_position(
+    camera: Single<(&Camera, &GlobalTransform), With<Camera3d>>,
+    monitor: Single<&Monitor, With<PrimaryMonitor>>,
+    mut cube: Query<&mut Transform, With<Cube>>,
+    mut light: Query<&mut Transform, (With<PointLight>, Without<Cube>)>,
+) {
+    let (camera, camera_transform) = *camera;
+
+    let viewport_position = Vec2::new(
+        monitor.physical_width as f32 - CUBE_SIZE * 70.0,
+        monitor.physical_height as f32 - CUBE_SIZE * 70.0,
+    ) / monitor.scale_factor as f32;
+
+    // Calculate a ray pointing from the camera into the world based on the cursor's position.
+    let Ok(ray) = camera.viewport_to_world(camera_transform, viewport_position) else {
+        return;
+    };
+
+    // Calculate if and where the ray is hitting the ground plane.
+    let Some(distance) = ray.intersect_plane(Vec3::ZERO, InfinitePlane3d::new(Vec3::Y)) else {
+        return;
+    };
+    let cube_pos = ray.get_point(distance);
+    let cube_rotation = rotation_of_cube(&cube_pos, camera_transform);
+
+    for mut transform in cube.iter_mut() {
+        transform.translation = cube_pos;
+        transform.rotation = cube_rotation;
+    }
+
     // 计算旋转后的对称轴方向（原局部坐标系中的对角线方向）
     let world_symmetry_axis = cube_rotation * -LOCAL_CORNER.normalize(); // 转换到世界坐标系
 
     // 设置光源沿对称轴方向偏移（距离根据正方体大小调整）
     let light_offset_distance = 5.0; // 光源距离中心的距离
     let light_position = cube_pos + world_symmetry_axis * light_offset_distance;
-    commands.spawn((
-        PointLight {
-            shadows_enabled: true,
-            ..default()
-        },
-        Transform::from_translation(light_position),
-    ));
-}
 
-fn screen_to_world(
-    camera_transform: &Transform,
-    screen_pos: Vec2,
-    viewport_size: Vec2,
-) -> Option<Vec2> {
-    // 1. 视口逆变换：屏幕坐标转NDC
-    let ndc_x = 1.0 - (screen_pos.x / viewport_size.x) * 2.0;
-    let ndc_y = (screen_pos.y / viewport_size.y) * 2.0 - 1.0;
-
-    // 2. 构造裁剪空间齐次坐标（假设深度为1.0，对应远平面）
-    let clip_coords = Vec4::new(ndc_x, ndc_y, 1.0, 1.0);
-
-    // 3. 逆投影变换：裁剪空间转视图空间
-    let inverse_projection = Camera::default().clip_from_view().inverse();
-    let view_homogeneous = inverse_projection * clip_coords;
-    let view_coords = view_homogeneous.truncate() / view_homogeneous.w;
-
-    // 4. 计算视图空间的射线方向并归一化
-    let ray_dir_view = view_coords.normalize();
-
-    // 5. 将射线方向转换到世界空间
-    let ray_dir_world = camera_transform.rotation * ray_dir_view;
-
-    // 6. 获取相机位置
-    let camera_pos = camera_transform.translation;
-
-    // 7. 计算射线与z=0平面的交点
-    if ray_dir_world.z.abs() < 1e-6 {
-        return None; // 射线平行于平面，无交点
+    for mut transform in light.iter_mut() {
+        transform.translation = light_position;
     }
-
-    let t = -camera_pos.z / ray_dir_world.z;
-    let world_x = camera_pos.x + t * ray_dir_world.x;
-    let world_y = camera_pos.y + t * ray_dir_world.y;
-
-    Some(Vec2::new(world_x, world_y))
 }
 
-fn rotation_of_cube(cube_transform: &Transform, camera_transform: &Transform) -> Quat {
-    let camera_pos = camera_transform.translation;
-    let cube_pos = cube_transform.translation;
+fn rotation_of_cube(cube_pos: &Vec3, camera_transform: &GlobalTransform) -> Quat {
+    let camera_pos = camera_transform.translation();
 
     // 计算正方体中心到相机的方向
     let target_dir = cube_pos - camera_pos;

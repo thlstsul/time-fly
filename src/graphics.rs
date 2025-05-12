@@ -11,8 +11,8 @@ mod time;
 
 pub struct GraphicsPlugin;
 
-pub const CAMERA_TRANFOMER: Transform = Transform {
-    translation: Vec3::new(0.0, 0.0, 16.0),
+const CAMERA_TRANFOMER: Transform = Transform {
+    translation: Vec3::new(15.0, 5.0, 15.0),
     rotation: Quat::from_xyzw(0.0, 0.0, 0.0, 1.0),
     scale: Vec3::new(1.0, 1.0, 1.0),
 };
