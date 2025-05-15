@@ -37,8 +37,11 @@ impl Plugin for CubePlugin {
             })
             .add_systems(Startup, setup)
             .add_systems(Update, set_cube_position.run_if(run_once))
-            .add_systems(Update, auto_rotate.run_if(on_timer(Duration::from_secs(1))))
-            .add_systems(Update, rotate_face);
+            .add_systems(
+                FixedUpdate,
+                auto_rotate.run_if(on_timer(Duration::from_secs(1))),
+            )
+            .add_systems(FixedUpdate, rotate_face);
     }
 }
 

@@ -40,5 +40,6 @@ fn main() {
         ))
         .add_plugins(EntropyPlugin::<WyRand>::default())
         .add_plugins(GraphicsPlugin)
+        .insert_resource(Time::<Fixed>::from_hz(60.0))
         .run();
 }

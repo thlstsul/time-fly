@@ -20,8 +20,8 @@ const CAMERA_TRANFOMER: Transform = Transform {
 impl Plugin for GraphicsPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(ClearColor(Color::NONE))
-            .add_systems(Startup, (setup_window, setup_camera))
-            .add_plugins(CubePlugin);
+            .add_plugins(CubePlugin)
+            .add_systems(Startup, (setup_window, setup_camera));
     }
 }
 
