@@ -2,17 +2,15 @@ use std::{f32::consts::PI, time::Duration};
 
 use bevy::{
     asset::RenderAssetUsages,
+    camera::RenderTarget,
+    mesh::VertexAttributeValues,
     prelude::*,
-    render::{
-        camera::RenderTarget,
-        mesh::VertexAttributeValues,
-        render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages},
-    },
+    render::render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages},
     time::common_conditions::on_timer,
     window::{Monitor, PrimaryMonitor},
 };
 use bevy_prng::WyRand;
-use bevy_rand::prelude::Entropy;
+use bevy_rand::global::GlobalRng;
 use rand_core::RngCore;
 
 use super::time::{TimePlugin, TimeSpan};
@@ -90,7 +88,7 @@ fn setup(
         .spawn((
             Camera2d,
             Camera {
-                target: RenderTarget::Image(cube_texture.clone()),
+                target: RenderTarget::Image(cube_texture.clone().into()),
                 ..default()
             },
         ))
@@ -108,7 +106,7 @@ fn setup(
                 ..default()
             },
             BackgroundColor(Color::NONE),
-            TargetCamera(texture_camera),
+            UiTargetCamera(texture_camera),
         ))
         .with_children(|parent| {
             parent.spawn((
@@ -149,7 +147,6 @@ fn setup(
             Mesh3d(cube_handle),
             MeshMaterial3d(time_material_handle),
             Cube,
-            Entropy::<WyRand>::default(),
         ))
         .with_children(|commands| {
             let mut colorful_cube = Mesh::from(Cuboid::from_length(CUBE_PIECE_SIZE));
@@ -258,7 +255,7 @@ fn rotation_of_cube(cube_pos: &Vec3, camera_transform: &GlobalTransform) -> Quat
 }
 
 fn auto_rotate(
-    mut rng: Single<&mut Entropy<WyRand>, With<Cube>>,
+    mut rng: Single<&mut WyRand, With<GlobalRng>>,
     mut rotation_state: ResMut<RotationState>,
 ) {
     if rotation_state.is_rotating {

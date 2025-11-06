@@ -30,6 +30,7 @@ impl InputMode for IMEControl {
     }
 }
 
+#[allow(dead_code)]
 impl IMEControl {
     /// 获取当前输入模式
     fn get_input_mode(&self, hwnd: Option<HWND>) -> Result<IMEResponse> {

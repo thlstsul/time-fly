@@ -16,6 +16,7 @@ pub struct IMEResponse {
     pub is_cn: bool,
 }
 
+#[allow(dead_code)]
 pub struct IMEControl {
     check_timeout: u32,
     base_status: bool,

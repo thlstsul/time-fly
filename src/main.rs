@@ -23,15 +23,15 @@ fn main() {
                 primary_window: Some(Window {
                     transparent: true,
                     decorations: false,
-                    cursor_options: CursorOptions {
-                        hit_test: false,
-                        ..default()
-                    },
                     present_mode: PresentMode::AutoNoVsync,
                     window_level: WindowLevel::AlwaysOnTop,
                     skip_taskbar: true,
                     #[cfg(target_os = "macos")]
                     composite_alpha_mode: CompositeAlphaMode::PostMultiplied,
+                    ..default()
+                }),
+                primary_cursor_options: Some(CursorOptions {
+                    hit_test: false,
                     ..default()
                 }),
                 ..default()

@@ -1,7 +1,9 @@
 use bevy::{
     app::{Plugin, Startup},
-    core_pipeline::{bloom::Bloom, tonemapping::Tonemapping},
+    core_pipeline::tonemapping::Tonemapping,
+    post_process::bloom::Bloom,
     prelude::*,
+    render::view::Hdr,
     window::{Monitor, PrimaryMonitor, PrimaryWindow, WindowResolution},
 };
 use cube::CubePlugin;
@@ -30,8 +32,8 @@ fn setup_window(
     mut window: Single<&mut Window, With<PrimaryWindow>>,
 ) {
     // 完全等于屏幕大小会进入全屏模式，窗口背景变黑
-    let width = monitor.physical_width as f32 - 0.1;
-    let height = monitor.physical_height as f32 - 0.1;
+    let width = monitor.physical_width - 1;
+    let height = monitor.physical_height - 1;
     let scale_factor = monitor.scale_factor as f32;
     window.resolution =
         WindowResolution::new(width, height).with_scale_factor_override(scale_factor);
@@ -42,10 +44,8 @@ fn setup_camera(mut commands: Commands) {
     // 添加相机
     commands.spawn((
         Camera3d::default(),
-        Camera {
-            hdr: true,
-            ..default()
-        },
+        Camera::default(),
+        Hdr,
         Tonemapping::TonyMcMapface,
         CAMERA_TRANFOMER,
         Bloom::NATURAL,
