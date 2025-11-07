@@ -48,7 +48,7 @@ impl Plugin for CubePlugin {
 struct Cube;
 
 #[derive(Component, Debug)]
-#[require(Mesh3d)]
+#[require(Mesh3d, Visibility)]
 struct CubePiece {
     x: i32,
     y: i32,
@@ -107,6 +107,7 @@ fn setup(
             },
             BackgroundColor(Color::NONE),
             UiTargetCamera(texture_camera),
+            Transform::default(),
         ))
         .with_children(|parent| {
             parent.spawn((
