@@ -11,7 +11,7 @@ use bevy::{
 };
 use bevy_prng::WyRand;
 use bevy_rand::global::GlobalRng;
-use rand_core::RngCore;
+use rand_core::Rng as _;
 
 use super::time::{TimePlugin, TimeSpan};
 
@@ -87,10 +87,8 @@ fn setup(
     let texture_camera = commands
         .spawn((
             Camera2d,
-            Camera {
-                target: RenderTarget::Image(cube_texture.clone().into()),
-                ..default()
-            },
+            Camera::default(),
+            RenderTarget::Image(cube_texture.clone().into()),
         ))
         .id();
 
