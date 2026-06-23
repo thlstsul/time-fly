@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use bevy::{app::Plugin, prelude::*};
-use time::{macros::format_description, OffsetDateTime};
+use time::{OffsetDateTime, macros::format_description};
 
 const DELTA_SECOND: u64 = 60;
 

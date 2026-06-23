@@ -1,9 +1,9 @@
 use bevy::{
     app::{Plugin, Startup},
+    camera::Hdr,
     core_pipeline::tonemapping::Tonemapping,
     post_process::bloom::Bloom,
     prelude::*,
-    render::view::Hdr,
     window::{Monitor, PrimaryMonitor, PrimaryWindow, WindowResolution},
 };
 use cube::CubePlugin;

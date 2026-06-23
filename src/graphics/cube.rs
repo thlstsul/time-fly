@@ -81,7 +81,6 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut images: ResMut<Assets<Image>>,
-    asset_server: Res<AssetServer>,
 ) {
     let cube_texture = images.add(cube_texture());
     let texture_camera = commands
@@ -111,8 +110,8 @@ fn setup(
             parent.spawn((
                 TimeSpan,
                 TextFont {
-                    font: asset_server.load("fonts/FiraSans-Bold.ttf"),
-                    font_size: 50.,
+                    font: FontSource::SansSerif,
+                    font_size: FontSize::Px(50.),
                     ..default()
                 },
                 Transform::default().with_rotation(Quat::from_rotation_z(PI / 4.)),
@@ -186,7 +185,7 @@ fn setup(
         });
 
     commands.spawn(PointLight {
-        shadows_enabled: true,
+        contact_shadows_enabled: true,
         ..default()
     });
 }
